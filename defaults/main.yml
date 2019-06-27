@@ -1,0 +1,10 @@
+---
+dl_poly_version: "1-10"
+dl_poly_git_tag: "RELEASE-{{ dl_poly_version }}"
+dl_poly_src_archive: "dl_poly-{{ dl_poly_git_tag }}.tar.gz"
+dl_poly_url: "https://gitlab.com/DL_POLY_Classic/dl_poly/-/archive/{{ dl_poly_git_tag }}/{{ dl_poly_src_archive }}" # yamllint disable-line
+
+dl_poly_code_folder: "/tmp"
+dl_poly_topdir: "{{ dl_poly_code_folder }}/dl_poly-{{ dl_poly_git_tag }}"
+
+root_user: root

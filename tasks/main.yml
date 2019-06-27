@@ -1,0 +1,57 @@
+---
+# prerequisites
+- name: Install libraries
+  become: true
+  become_user: "{{ root_user }}"
+  apt:
+    name:
+      - build-essential
+      - gfortran
+      - openmpi-bin
+      - libopenmpi-dev
+    state: present
+    update_cache: true
+
+# Will only download once
+- name: Get DL POLY source
+  get_url:
+    url: "{{ dl_poly_url }}"
+    dest: "{{ dl_poly_code_folder }}/{{ dl_poly_src_archive }}"
+  register: dl_poly_download
+
+# For some reason this is not idempotent on travis
+# See also https://github.com/ansible/ansible/issues/22254
+# (but not sure it is related)
+- name: Extract DL POLY source
+  tags:
+    - skip_ansible_lint
+  unarchive:
+    src: "{{ dl_poly_download.dest }}"
+    dest: "{{ dl_poly_code_folder }}"
+    remote_src: true
+  when: dl_poly_download.changed
+
+- name: Copy makefile
+  copy:
+    src: "{{ dl_poly_topdir }}/build/MakePAR"
+    dest: "{{ dl_poly_topdir }}/source/Makefile"
+    remote_src: true
+
+- name: Make DL POLY executable
+  command: "make dlpoly"
+  args:
+    creates: "{{ dl_poly_topdir }}/execute/DLPOLY.X"
+    chdir: "{{ dl_poly_topdir }}/source"
+
+- name: "Put a line in ~/.profile to add DLPOLY to the path"
+  lineinfile:
+    path: "${HOME}/.profile"
+    line: "export PATH=${PATH}:{{ dl_poly_topdir }}/execute"
+
+- include_role:
+    name: release_notes
+  vars:
+    section: "dl_poly"
+    option: "version"
+    value: "{{ dl_poly_version }}"
+  when: release_notes is defined and release_notes
